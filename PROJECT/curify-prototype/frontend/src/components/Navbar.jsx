@@ -56,7 +56,7 @@ export default function Navbar() {
               <Link to="/" className="flex items-center gap-2.5 group">
                 <motion.div className="h-9 w-9 rounded-xl overflow-hidden flex items-center justify-center"
                   whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-                  <img src="/pokecut.png" alt="CURIFY" className="h-full w-full object-cover" />
+                  <img src="/LOGO.png" alt="CURIFY" className="h-full w-full object-contain" />
                 </motion.div>
                 <span className="text-white font-bold text-lg tracking-tight hidden sm:inline">CURIFY</span>
               </Link>

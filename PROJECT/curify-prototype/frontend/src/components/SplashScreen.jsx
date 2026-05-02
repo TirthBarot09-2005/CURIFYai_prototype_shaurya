@@ -1,104 +1,179 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
-import { Activity } from 'lucide-react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 
 export default function SplashScreen({ onComplete }) {
-  const [phase, setPhase] = useState(0); // 0=logo, 1=tagline, 2=fadeout
+  const [phase, setPhase] = useState(0); // 0=playing, 1=fadeout
+  const [progress, setProgress] = useState(0);
+  const [canSkip, setCanSkip] = useState(false);
+  const videoRef = useRef(null);
+  const hasCompleted = useRef(false);
+
+  const handleComplete = useCallback(() => {
+    if (hasCompleted.current) return;
+    hasCompleted.current = true;
+    setPhase(1);
+    setTimeout(() => onComplete(), 800);
+  }, [onComplete]);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase(1), 800);
-    const t2 = setTimeout(() => setPhase(2), 2000);
-    const t3 = setTimeout(() => onComplete(), 2600);
-    return () => [t1, t2, t3].forEach(clearTimeout);
-  }, [onComplete]);
+    // Allow skip after 1.5s
+    const skipTimer = setTimeout(() => setCanSkip(true), 1500);
+    // Absolute fallback — never hang on splash
+    const fallback = setTimeout(() => handleComplete(), 15000);
+    return () => {
+      clearTimeout(skipTimer);
+      clearTimeout(fallback);
+    };
+  }, [handleComplete]);
+
+  const handleTimeUpdate = () => {
+    const video = videoRef.current;
+    if (video && video.duration) {
+      setProgress((video.currentTime / video.duration) * 100);
+    }
+  };
+
+  const handleVideoEnd = () => {
+    handleComplete();
+  };
+
+  const handleSkip = () => {
+    handleComplete();
+  };
 
   return (
     <AnimatePresence>
-      {phase < 2 && (
+      {phase < 1 && (
         <motion.div
-          className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-[#020617]"
+          className="splash-video-overlay"
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.6 }}
+          exit={{ opacity: 0, scale: 1.05 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            background: '#000',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+          }}
         >
-          {/* Glow bg */}
-          <div className="absolute inset-0 overflow-hidden">
+          {/* Video element */}
+          <video
+            ref={videoRef}
+            src="/STARTING.mp4"
+            autoPlay
+            muted
+            playsInline
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={handleVideoEnd}
+            onError={handleComplete}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          />
+
+          {/* Subtle vignette overlay for cinematic feel */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background:
+                'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%)',
+              pointerEvents: 'none',
+            }}
+          />
+
+          {/* Bottom gradient for progress bar area */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: '120px',
+              background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)',
+              pointerEvents: 'none',
+            }}
+          />
+
+          {/* Progress bar */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: '3px',
+              background: 'rgba(255,255,255,0.1)',
+            }}
+          >
             <motion.div
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full"
-              style={{ background: 'radial-gradient(circle, rgba(34,197,94,0.12) 0%, transparent 70%)' }}
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 3, repeat: Infinity }}
+              style={{
+                height: '100%',
+                background: 'linear-gradient(90deg, #22c55e, #0ea5e9)',
+                width: `${progress}%`,
+                boxShadow: '0 0 12px rgba(34,197,94,0.6)',
+              }}
+              transition={{ duration: 0.1 }}
             />
           </div>
 
-          {/* Spinner ring */}
-          <motion.div
-            className="relative mb-8"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-          >
-            <div className="relative w-24 h-24">
-              {/* Outer rotating ring */}
-              <motion.div
-                className="absolute inset-0 rounded-full border-2 border-transparent"
-                style={{ borderTopColor: '#22c55e', borderRightColor: 'rgba(34,197,94,0.3)' }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
-              />
-              {/* Inner counter-rotating ring */}
-              <motion.div
-                className="absolute inset-3 rounded-full border-2 border-transparent"
-                style={{ borderBottomColor: '#0ea5e9', borderLeftColor: 'rgba(14,165,233,0.3)' }}
-                animate={{ rotate: -360 }}
-                transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-              />
-              {/* Center icon */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                  <img src="/pokecut.png" alt="CURIFY" className="w-10 h-10 object-cover rounded-lg" />
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Logo text */}
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-          >
-            <h1 className="text-4xl font-extrabold tracking-tight">
-              <span className="text-gradient">CURIFY</span>
-            </h1>
-            <p className="text-slate-500 text-sm mt-1 font-medium tracking-widest uppercase">AI Navigator</p>
-          </motion.div>
-
-          {/* Tagline */}
+          {/* Skip button — appears after 1.5s */}
           <AnimatePresence>
-            {phase >= 1 && (
-              <motion.p
-                className="mt-6 text-slate-400 text-base text-center max-w-xs"
-                initial={{ opacity: 0, y: 8 }}
+            {canSkip && (
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
                 transition={{ duration: 0.4 }}
+                onClick={handleSkip}
+                style={{
+                  position: 'absolute',
+                  bottom: '28px',
+                  right: '32px',
+                  background: 'rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  color: 'rgba(255,255,255,0.7)',
+                  padding: '8px 20px',
+                  borderRadius: '999px',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  letterSpacing: '0.05em',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s ease',
+                  fontFamily: 'inherit',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+                  e.currentTarget.style.color = '#fff';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
+                }}
               >
-                Turning clinical uncertainty into<br />
-                <span className="text-emerald-400 font-medium">bankable financial certainty.</span>
-              </motion.p>
+                Skip
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="13 17 18 12 13 7" />
+                  <polyline points="6 17 11 12 6 7" />
+                </svg>
+              </motion.button>
             )}
           </AnimatePresence>
-
-          {/* Loading dots */}
-          <div className="flex gap-1.5 mt-8">
-            {[0, 1, 2].map(i => (
-              <motion.div
-                key={i}
-                className="w-1.5 h-1.5 rounded-full bg-emerald-500"
-                animate={{ opacity: [0.3, 1, 0.3] }}
-                transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-              />
-            ))}
-          </div>
         </motion.div>
       )}
     </AnimatePresence>

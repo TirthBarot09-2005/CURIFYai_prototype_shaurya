@@ -146,7 +146,7 @@ export default function OnboardingPage() {
             >
               <div className="mb-10">
                 <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
-                  <img src="/pokecut.png" alt="Curify" className="w-10 h-10" />
+                  <img src="/LOGO.png" alt="Curify" className="w-10 h-10 object-contain" />
                 </div>
                 <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">Welcome to CurifyAI</h1>
                 <p className="text-slate-400">Tell us how you'll be using the platform to personalize your experience.</p>

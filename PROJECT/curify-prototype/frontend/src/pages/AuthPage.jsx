@@ -29,7 +29,7 @@ export default function AuthPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-3">
-            <img src="/pokecut.png" alt="CURIFY" className="w-12 h-12 rounded-xl" />
+            <img src="/LOGO.png" alt="CURIFY" className="w-12 h-12 rounded-xl object-contain" />
             <span className="text-2xl font-bold text-white tracking-tight">CURIFY AI</span>
           </Link>
         </div>

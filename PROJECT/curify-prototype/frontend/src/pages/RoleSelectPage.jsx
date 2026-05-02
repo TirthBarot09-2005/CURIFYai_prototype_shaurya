@@ -66,7 +66,7 @@ export default function RoleSelectPage() {
       <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-2xl">
         {/* Logo */}
         <div className="text-center mb-10">
-          <img src="/pokecut.png" alt="CURIFY" className="w-14 h-14 rounded-xl mx-auto mb-3" />
+          <img src="/LOGO.png" alt="CURIFY" className="w-14 h-14 rounded-xl mx-auto mb-3 object-contain" />
           <h1 className="text-3xl font-bold text-white mb-2">Welcome, {user?.displayName || 'User'}!</h1>
           <p className="text-slate-400 text-sm">Choose how you'd like to use CURIFY AI</p>
         </div>
